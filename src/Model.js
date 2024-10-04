@@ -18,10 +18,12 @@ const {
 const {
 	callbackify,
 	errors,
+	getDeepValue,
 	getMyHooks,
 	getMyFields,
 	prepareInsert,
 	resolveRelationship,
+	setDeepValue,
 	stringConvert,
 	stringConvertV2,
 } = require("./utils.js");
@@ -291,7 +293,46 @@ Model.prototype.addField = function(args) {
 	// args.validation (jsvalidator syntax)
 	
 	args.toJSON = args.toJSON !== undefined ? args.toJSON : true; // default toJSON to be true
-	self.fields[args.name] = args;
+
+	const flatten = arr => arr.reduce((a, b) => {
+		b instanceof Array ? a.push(...flatten(b)) : a.push(b);
+	return a;
+	}, [])
+
+	let newPaths = args.name.split(".");
+	
+	if (newPaths.length > 1) {
+		const newField = newPaths[newPaths.length-1];
+		let oldPaths = newPaths.slice(0, -1);
+
+		// create path to new field and validate schema
+		oldPaths = oldPaths.map((val, i) => {
+			if (i === 0) {
+				return [val, "validation", "schema"]; 
+			}
+			const currPath = oldPaths.slice(0, i).join(".");
+			const obj = getDeepValue(self.fields, currPath);
+			if (obj.type !== "object") {
+				throw Error(util.format("Cannot create relationship '%s'. Column '%s' is not declared in the Model as an object.", args.name, currPath));
+			}
+			obj.schema = obj.schema || []; // ensure schema exists
+			return [val, "schema"];
+		});
+		oldPaths = flatten(oldPaths)
+
+		//
+		const objSchema = getDeepValue(self.fields, oldPaths.join("."));
+		const data = {
+			name: newField,
+			...args.validation
+		}
+		objSchema.push(data);
+		setDeepValue(self.fields, oldPaths.join("."), objSchema);
+		console.log(util.inspect(self.fields, {depth: 999}))
+	} else {
+		self.fields[args.name] = args;
+	}
+
 }
 
 Model.prototype.addVirtual = function(args) {
@@ -1160,7 +1201,7 @@ Model.prototype._getHooksByType = function(type, hooks) {
 	var matcher = new RegExp("^" + type + "_");
 	
 	var returnHooks = [];
-	
+
 	for(var i = 0; i < hooks.length; i++) {
 		var val = hooks[i];
 		var isMyType = val.name.match(matcher) !== null;
@@ -1207,8 +1248,12 @@ async function _executeHooks(args) {
 	for(var i = 0; i < args.hooks.length; i++) {
 		var val = args.hooks[i];
 		if (val.name.match(/\./) !== null) {
-			// only execute hooks which are part of my namespace
-			continue;
+
+			// only execute hooks which are part of my namespace ()
+			if (self.relationships[val.name] === undefined) {
+				// only relationships allow for periods in their name
+				continue;
+			}
 		}
 		
 		if (self.hooks[args.type][val.name] === undefined) {

@@ -288,6 +288,44 @@ function prepareInsert(data, stripEmpty) {
 	return returnData;
 }
 
+function getDeepValue(obj, path) {
+	const paths = path.split('.');
+	let current = obj;
+
+	for (let i = 0; i < paths.length; ++i) {
+		if (current[paths[i]] == undefined) {
+			return undefined;
+		} else {
+			current = current[paths[i]];
+		}
+	}
+	return current;
+}
+
+function setDeepValue(obj = {}, path = "", val) {	
+	path = path.replace(/\[/g, '.[');
+    const keys = path.split(".");
+	
+    for (let i = 0; i < keys.length; i++) {
+        let currentKey = keys[i];
+        let nextKey = keys[i + 1];
+        if (currentKey.includes("[")) {
+            currentKey = parseInt(currentKey.substring(1, currentKey.length - 1));
+        }
+        if (nextKey && nextKey.includes("[")) {
+            nextKey = parseInt(nextKey.substring(1, nextKey.length - 1));
+        }
+		
+        if (typeof nextKey !== "undefined") {
+            obj[currentKey] = obj[currentKey] ? obj[currentKey] : (isNaN(nextKey) ? {} : []);
+        } else {
+            obj[currentKey] = val;
+        }
+		
+        obj = obj[currentKey];
+    }
+};
+
 function resolveRelationship(args, cb) {
 	// args.type - single or multiple
 	// args.leftKey - The key in our Document that points to an object in the related model
@@ -322,7 +360,7 @@ function resolveRelationship(args, cb) {
 	var originalIndex = {};
 	
 	args.docs.forEach(function(val, i) {
-		var values = val[args.leftKey];
+		const values = getDeepValue(val, args.leftKey);
 		
 		if (values !== undefined) {
 			var modelName;
@@ -389,7 +427,7 @@ function resolveRelationship(args, cb) {
 		if (err) { return cb(err); }
 		
 		args.docs.forEach(function(val, i) {
-			var leftValue = val[args.leftKey];
+			const leftValue = getDeepValue(val, args.leftKey);
 			
 			if (leftValue === undefined) {
 				// left value doesn't exist so this documents lacks data for this relationship
@@ -430,7 +468,7 @@ function resolveRelationship(args, cb) {
 				}
 			}
 			
-			val[args.objectKey] = tempValue;
+			setDeepValue(val, args.objectKey, tempValue);
 		});
 		
 		cb(null, args.docs);
@@ -473,10 +511,12 @@ module.exports = {
 	errors : {
 		ValidationError : _newErrorType("ValidationError")
 	},
+	getDeepValue,
 	getMyHooks,
 	getMyFields,
 	prepareInsert,
 	resolveRelationship,
+	setDeepValue,
 	stringConvert,
 	stringConvertV2,
 	typecasterObjectIdDef,

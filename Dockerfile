@@ -1,4 +1,4 @@
-FROM node:10.15.3
+FROM node:14.19.0
 
 COPY package.json /app/package.json
 RUN cd /app && npm install

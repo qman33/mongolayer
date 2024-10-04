@@ -1184,7 +1184,16 @@ describe(__filename, function() {
 					{ name : "bar", validation : { type : "string" } },
 					{ name : "baz", default : false, validation : { type : "boolean" } },
 					{ name : "any", validation : { type : "any" } },
-					{ name : "viewOn", validation : { type : "boolean" } }
+					{ name : "viewOn", validation : { type : "boolean" } },
+					{
+						name : "nested",
+						validation : {
+							type : "object",
+							schema : [
+								{ name : "is_nested", type: "boolean" }
+							]
+						}
+					}
 				],
 				relationships : [
 					{ name : "single", type : "single", modelName : "mongolayer_testRelated" },
@@ -1192,7 +1201,16 @@ describe(__filename, function() {
 					{ name : "multiple", type : "multiple", modelName : "mongolayer_testRelated" },
 					{ name : "multiple_multipleTypes", type : "multiple", multipleTypes : true },
 					{ name : "single_rightKey", type : "single", modelName : "mongolayer_testRelated", rightKey : "title", rightKeyValidation : { type : "string" } },
-					{ name : "multiple_rightKey", type : "multiple", modelName : "mongolayer_testRelated", rightKey : "title", rightKeyValidation : { type : "string" } }
+					{ name : "multiple_rightKey", type : "multiple", modelName : "mongolayer_testRelated", rightKey : "title", rightKeyValidation : { type : "string" } },
+					{ name : "nested.single", type : "single", modelName : "mongolayer_testRelated" },
+					// FIXME: Add unittest here
+					// { name : "bogus.single", type : "single", modelName : "mongolayer_testRelated" },
+					{ name : "nested.single_multipleTypes", type : "single", multipleTypes : true },
+					{ name : "nested.multiple", type : "multiple", modelName : "mongolayer_testRelated" },
+					{ name : "nested.multiple_multipleTypes", type : "multiple", multipleTypes : true },
+					{ name : "nested.single_rightKey", type : "single", modelName : "mongolayer_testRelated", rightKey : "title", rightKeyValidation : { type : "string" } },
+					{ name : "nested.multiple_rightKey", type : "multiple", modelName : "mongolayer_testRelated", rightKey : "title", rightKeyValidation : { type : "string" } },
+
 				],
 				hooks : [
 					{
@@ -1305,11 +1323,22 @@ describe(__filename, function() {
 				collection : "mongolayer_testRelated",
 				fields : [
 					{ name : "title", validation : { type : "string" } },
-					{ name : "extra", validation : { type : "string" } }
+					{ name : "extra", validation : { type : "string" } },
+					{
+						name : "nested",
+						validation : {
+							type : "object",
+							schema : [
+								{ name : "is_nested", type: "boolean" }
+							]
+						}
+					}
 				],
 				relationships : [
 					{ name : "singleSecond", type : "single", modelName : "mongolayer_testRelated2" },
-					{ name : "singleRequired", type : "single", modelName : "mongolayer_testRelated2", required : true }
+					{ name : "singleRequired", type : "single", modelName : "mongolayer_testRelated2", required : true },
+					{ name : "nested.singleSecond", type : "single", modelName : "mongolayer_testRelated2" },
+					{ name : "nested.singleRequired", type : "single", modelName : "mongolayer_testRelated2" }
 				],
 				hooks : [
 					contextHook
@@ -2998,7 +3027,7 @@ describe(__filename, function() {
 				});
 			});
 			
-			describe("relationships", function(done) {
+			describe.only("relationships", function(done) {
 				var root1 = new mongolayer.ObjectId();
 				var root2 = new mongolayer.ObjectId();
 				var root3 = new mongolayer.ObjectId();
@@ -3013,6 +3042,20 @@ describe(__filename, function() {
 				var related1_4 = new mongolayer.ObjectId();
 				var related2_1 = new mongolayer.ObjectId();
 				var related2_2 = new mongolayer.ObjectId();
+				const nested_root1 = new mongolayer.ObjectId();
+				const nested_root2 = new mongolayer.ObjectId();
+				const nested_root3 = new mongolayer.ObjectId();
+				const nested_root4 = new mongolayer.ObjectId();
+				const nested_root5 = new mongolayer.ObjectId();
+				const nested_root6 = new mongolayer.ObjectId();
+				const nested_root7 = new mongolayer.ObjectId();
+				const nested_root8 = new mongolayer.ObjectId();
+				const nested_related1_1 = new mongolayer.ObjectId();
+				const nested_related1_2 = new mongolayer.ObjectId();
+				const nested_related1_3 = new mongolayer.ObjectId();
+				const nested_related1_4 = new mongolayer.ObjectId();
+				const nested_related2_1 = new mongolayer.ObjectId();
+				const nested_related2_2 = new mongolayer.ObjectId();
 				
 				beforeEach(function(done) {
 					async.parallel([
@@ -3094,6 +3137,107 @@ describe(__filename, function() {
 											modelName : "bogus"
 										}
 									]
+								},
+								{
+									_id : nested_root1,
+									foo : "nested_foo1",
+									nested : {
+										is_nested : true
+									}
+								},
+								{
+									_id : nested_root2,
+									foo : "nested_foo2",
+									nested : {
+										is_nested : true,
+										single_id : nested_related1_1,
+										single_rightKey_id : "nested_title1_1",
+										multiple_rightKey_ids : ["nested_title1_2", "nested_title1_1"]
+									}
+								},
+								{
+									_id : nested_root3,
+									foo : "nested_foo3",
+									nested : {
+										is_nested : true,
+										multiple_ids : [nested_related1_4, nested_related1_1],
+										single_rightKey_id : "nested_title1_2",
+										multiple_rightKey_ids : ["nested_title1_3", "nested_title1_1"]
+									}
+								},
+								{
+									_id : nested_root4,
+									foo : "nested_foo4",
+									bar : "nested_bar4",
+									nested : {
+										is_nested : true,
+										single_id : nested_related1_2,
+										multiple_ids : [nested_related1_1]
+									}
+								},
+								{
+									_id : nested_root5,
+									foo : "nested_foo5",
+									nested : {
+										is_nested : true,
+										single_multipleTypes_id : {
+											id : nested_related1_1,
+											modelName : "mongolayer_testRelated"
+										}
+									}
+								},
+								{
+									_id : nested_root6,
+									foo : "nested_foo6",
+									nested : {
+										is_nested : true,
+										single_multipleTypes_id : {
+											id : nested_related2_1,
+											modelName : "mongolayer_testRelated2"
+										}
+									}
+								},
+								{
+									_id : nested_root7,
+									foo : "nested_foo7",
+									nested : {
+										is_nested : true,
+										multiple_multipleTypes_ids : [
+											{
+												id : nested_related1_1,
+												modelName : "mongolayer_testRelated"
+											},
+											{
+												id : nested_related2_1,
+												modelName : "mongolayer_testRelated2"
+											},
+											{
+												id : nested_related1_4,
+												modelName : "mongolayer_testRelated"
+											}
+										]
+									}
+								},
+								{
+									_id : nested_root8,
+									foo : "nested_foo8",
+									nested : {
+										is_nested : true,
+										multiple_multipleTypes_ids : [
+											{
+												id : nested_related2_1, // bogus id doesn't exist in this model
+												modelName : "mongolayer_testRelated"
+											},
+											{
+												id : nested_related1_1, // valid id
+												modelName : "mongolayer_testRelated"
+											},
+											{
+												id : nested_related1_1, // bogus model
+												modelName : "bogus"
+											}
+										]
+									}
 								}
 							], cb);
 						},
@@ -3121,6 +3265,45 @@ describe(__filename, function() {
 									_id : related1_4,
 									title : "title1_4",
 									singleRequired_id : related2_1
+								},
+								{
+									_id : nested_related1_1,
+									title : "nested_title1_1",
+									singleRequired_id : related2_2,
+									nested : {
+										is_nested : true,
+										singleRequired_id : nested_related2_2
+									}
+								},
+								{
+									_id : nested_related1_2,
+									title : "nested_title1_2",
+									extra : "nested_extra1_2",
+									singleRequired_id : related2_1,
+									nested : {
+										is_nested : true,
+										singleSecond_id : nested_related2_1,
+										singleRequired_id : nested_related2_1
+									}
+								},
+								{
+									_id : nested_related1_3,
+									title : "nested_title1_3",
+									singleRequired_id : related2_1,
+									nested : {
+										is_nested : true,
+										singleSecond_id : nested_related2_2,
+										singleRequired_id : nested_related2_1
+									}
+								},
+								{
+									_id : nested_related1_4,
+									title : "nested_title1_4",
+									singleRequired_id : related2_1,
+									nested : {
+										is_nested : true,
+										singleRequired_id : nested_related2_1
+									}
 								}
 							], cb);
 						},
@@ -3134,6 +3317,15 @@ describe(__filename, function() {
 								{
 									_id : related2_2,
 									title : "title2_2"
+								},
+								{
+									_id : nested_related2_1,
+									title : "nested_title2_1",
+									extra : "nested_extra2_1"
+								},
+								{
+									_id : nested_related2_2,
+									title : "nested_title2_2"
 								}
 							], cb);
 						}
@@ -3290,6 +3482,157 @@ describe(__filename, function() {
 						assert.equal(docs[0].multiple.length, 2);
 						assert.equal(docs[0].multiple[0].singleRequired.title, "title2_1");
 						assert.equal(docs[0].multiple[1].singleRequired.title, "title2_2");
+						
+						done();
+					});
+				});
+
+				it("nested - should populate nested.single", function(done) {
+					model.find({ "nested.is_nested" : true }, { hooks : ["afterFind_nested.single"] }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs[0].foo, "nested_foo1");
+						assert.equal(docs[0].nested.single_id, undefined);
+						assert.equal(docs[1].foo, "nested_foo2");
+						assert.equal(docs[1].nested.single.title, "nested_title1_1");
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate nested.single with multipleTypes", function(done) {
+					model.find({ _id : { $in : [nested_root1, nested_root5, nested_root6] } }, { hooks : ["afterFind_nested.single_multipleTypes"] }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs[0].nested.single_multipleTypes, undefined);
+						assert.equal(docs[1].nested.single_multipleTypes.title, "nested_title1_1");
+						assert.equal(docs[2].nested.single_multipleTypes.title, "nested_title2_1");
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate nested.single with rightKey", function(done) {
+					model.find({ "nested.is_nested" : true }, { hooks : ["afterFind_nested.single_rightKey"], castDocs: false }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs[0].nested.single_rightKey, undefined);
+						assert.equal(docs[1].nested.single_rightKey.title, "nested_title1_1");
+						assert.equal(docs[1].nested.single_rightKey_id, docs[1].nested.single_rightKey.title);
+						assert.equal(docs[2].nested.single_rightKey.title, "nested_title1_2");
+						assert.equal(docs[2].nested.single_rightKey_id, docs[2].nested.single_rightKey.title);
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate nested.multiple", function(done) {
+					model.find({ "nested.is_nested" : true }, { hooks : ["afterFind_nested.multiple"] }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs[0].foo, "nested_foo1");
+						assert.equal(docs[0].nested.multiple, undefined);
+						assert.equal(docs[2].nested.multiple[0].title, "nested_title1_4");
+						assert.equal(docs[2].nested.multiple[1].title, "nested_title1_1");
+						assert.equal(docs[3].nested.multiple[0].title, "nested_title1_1");
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate nested.multiple with multipleTypes", function(done) {
+					model.find({ _id : { $in : [nested_root1, nested_root7, nested_root8] } }, { hooks : ["afterFind_nested.multiple_multipleTypes"] }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs[0].nested.multiple_multipleTypes, undefined);
+						assert.equal(docs[1].nested.multiple_multipleTypes[0].title, "nested_title1_1");
+						assert.equal(docs[1].nested.multiple_multipleTypes[1].title, "nested_title2_1");
+						assert.equal(docs[1].nested.multiple_multipleTypes[2].title, "nested_title1_4");
+						assert.equal(docs[2].nested.multiple_multipleTypes[0].title, "nested_title1_1");
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate nested.multiple with rightKey", function(done) {
+					model.find({ "nested.is_nested" : true }, { hooks : ["afterFind_nested.multiple_rightKey"] }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs[0].nested.multiple_rightKey, undefined);
+						assert.equal(docs[1].nested.multiple_rightKey[0].title, "nested_title1_2");
+						assert.equal(docs[1].nested.multiple_rightKey_ids[0], docs[1].nested.multiple_rightKey[0].title);
+						assert.equal(docs[1].nested.multiple_rightKey[1].title, "nested_title1_1");
+						assert.equal(docs[1].nested.multiple_rightKey_ids[1], docs[1].nested.multiple_rightKey[1].title);
+						assert.equal(docs[2].nested.multiple_rightKey[0].title, "nested_title1_3");
+						assert.equal(docs[2].nested.multiple_rightKey_ids[0], docs[2].nested.multiple_rightKey[0].title);
+						assert.equal(docs[2].nested.multiple_rightKey[1].title, "nested_title1_1");
+						assert.equal(docs[2].nested.multiple_rightKey_ids[1], docs[2].nested.multiple_rightKey[1].title);
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate with recursive hooks on nested.single", function(done) {
+					model.find({ _id : nested_root4 }, { hooks : ["afterFind_nested.single", "nested.single.afterFind_nested.singleSecond"] }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs.length, 1);
+						assert.equal(docs[0].nested.single.nested.singleSecond.title, "nested_title2_1");
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate with fields recursively on nested.single", function(done) {
+					async.parallel([
+						function(cb) {
+							model.findById(nested_root4, {
+								hooks : ["afterFind_nested.single", "nested.single.afterFind_nested.singleSecond"]
+							}, function(err, doc) {
+								assert.ifError(err);
+								
+								assert.strictEqual(doc.foo, "nested_foo4");
+								assert.strictEqual(doc.bar, "nested_bar4");
+								assert.strictEqual(doc.nested.single.title, "nested_title1_2");
+								assert.strictEqual(doc.nested.single.extra, "nested_extra1_2");
+								assert.strictEqual(doc.nested.single.nested.singleSecond.title, "nested_title2_1");
+								assert.strictEqual(doc.nested.single.nested.singleSecond.extra, "nested_extra2_1");
+								
+								cb(null);
+							});
+						},
+						function(cb) {
+							model.findById(nested_root4, {
+								hooks : ["afterFind_nested.single", "nested.single.afterFind_nested.singleSecond"],
+								fields : { bar : 0, "nested.single.extra" : 0, "nested.single.nested.singleSecond.title" : 0 }
+							}, function(err, doc) {
+								assert.ifError(err);
+								
+								assert.strictEqual(doc.foo, "nested_foo4");
+								assert.strictEqual(doc.bar, undefined);
+								assert.strictEqual(doc.nested.single.title, "nested_title1_2");
+								assert.strictEqual(doc.nested.single.extra, undefined);
+								assert.strictEqual(doc.nested.single.nested.singleSecond.title, undefined);
+								assert.strictEqual(doc.nested.single.nested.singleSecond.extra, "nested_extra2_1");
+								
+								cb(null);
+							});
+						}
+					], function(err) {
+						assert.ifError(err);
+						
+						done();
+					});
+				});
+				
+				it("nested - should populate with recursive hooks on nested.multiple", function(done) {
+					model.find({ _id : nested_root3 }, { hooks : ["afterFind_nested.multiple", "nested.multiple.afterFind_nested.singleRequired"] }, function(err, docs) {
+						assert.ifError(err);
+						
+						assert.equal(docs.length, 1);
+						assert.equal(docs[0].nested.multiple.length, 2);
+						assert.equal(docs[0].nested.multiple[0].nested.singleRequired.title, "nested_title2_1");
+						assert.equal(docs[0].nested.multiple[1].nested.singleRequired.title, "nested_title2_2");
 						
 						done();
 					});
@@ -3633,6 +3976,133 @@ describe(__filename, function() {
 						});
 					});
 				});
+			});
+		});
+
+		describe.only("nested relationships", function(done) {
+
+			beforeEach(function(done) {
+				model = new mongolayer.Model({
+					collection : "nested_relationships_test",
+					fields : [
+						{ name : "foo", validation : { type : "string" } },
+						{
+							name : "level_1",
+							validation : {
+								type : "object",
+								schema : [
+									{
+										name : "level_2",
+										validation : {
+											type : "object",
+											schema : [
+												{
+													name : "level_3",
+													validation : {
+														type : "object"
+													}
+												}
+											]
+										}
+									}
+								]
+							}
+						}
+					],
+					relationships : [
+						{ name : "level_1.single", type : "single", modelName : "alt_nested_relationships_test" },
+						// FIXME: Add unittest here
+						// { name : "bogus.single", type : "single", modelName : "alt_nested_relationships_test" },
+						{ name : "level_1.level_2.single_multipleTypes", type : "single", multipleTypes : true },
+						{ name : "level_1.level_2.level_3.multiple", type : "multiple", modelName : "alt_nested_relationships_test" },
+						{ name : "level_1.multiple_multipleTypes", type : "multiple", multipleTypes : true },
+						{ name : "level_1.level_2.single_rightKey", type : "single", modelName : "alt_nested_relationships_test", rightKey : "title", rightKeyValidation : { type : "string" } },
+						{ name : "level_1.level_2.level_3.multiple_rightKey", type : "multiple", modelName : "alt_nested_relationships_test", rightKey : "title", rightKeyValidation : { type : "string" } },
+					],
+					indexes : [
+						{ keys : { foo : 1 } }
+					]
+				});
+				
+				alt_model = new mongolayer.Model({
+					collection : "alt_nested_relationships_test",
+					fields : [
+						{ name : "title", validation : { type : "string" } },
+						{
+							name : "level_1",
+							validation : {
+								type : "object"
+							}
+						}
+					],
+					relationships : [
+						{ name : "level_1.single", type : "single", modelName : "alt_2_nested_relationships_test" },
+					],
+				});
+				
+				alt_model2 = new mongolayer.Model({
+					collection : "alt_2_nested_relationships_test",
+					fields : [
+						{ name : "title", validation : { type : "string" } }
+					]
+				});
+
+				async.series([
+					function(cb) {
+						async.parallel([
+							function(cb) {
+								conn.add({ model : model }, cb);
+							},
+							function(cb) {
+								conn.add({ model : alt_model }, cb);
+							},
+							function(cb) {
+								conn.add({ model : alt_model2 }, cb);
+							}
+						], cb);
+					},
+					function(cb) {
+						async.parallel([
+							function(cb) {
+								model.remove({}, cb);
+							},
+							function(cb) {
+								alt_model.remove({}, cb);
+							},
+							function(cb) {
+								alt_model2.remove({}, cb);
+							}
+						], cb);
+					}
+				], function(err) {
+					assert.ifError(err);
+					
+					done();
+				});
+			});
+
+			it("should fail to create model with broken nested relationship", function(done) {
+				try {
+					new mongolayer.Model({
+						collection : "nested_relationships_test",
+						fields : [
+							{ name : "foo", validation : { type : "string" } }
+						],
+						relationships : [
+							// Fails because the bogus object does not already exist
+							{ name : "bogus.single", type : "single", modelName : "alt_nested_relationships_test" }
+						]
+					});
+					
+					new mongolayer.Model({
+						collection : "alt_nested_relationships_test",
+						fields : [
+							{ name : "title", validation : { type : "string" } },
+						]
+					});
+				} catch(err) {
+					assert.strictEqual(err.message, "Cannot create relationship 'bogus.single'. Column 'bogus' is not declared in the Model as an object.");
+				}
 			});
 		});
 		
